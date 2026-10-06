@@ -643,6 +643,31 @@ class HelperDaemon:
                     response['success'] = True
                     response['message'] = f'Partial update ({x},{y} {w}x{h}) mode {mode} buf {buf:#x}'
 
+            elif cmd == 'sweep':
+                path = params.get('path')
+                pattern = params.get('pattern', 'ripple')
+                mode = int(params.get('mode', 6))
+                tile = int(params.get('tile', 256))
+                delay = float(params.get('delay', 0.02))
+                buf = 0x027675D0 if params.get('buffer', 1) == 2 else 0x0237F5D0
+                if not path or not os.path.isfile(path):
+                    response['error'] = "sweep requires a valid 'path' param"
+                else:
+                    def _do():
+                        if not self.eink_enabled:
+                            self.eink.enable_eink()
+                        raw = self.eink.read_image(path)
+                        old_raw = getattr(self, '_last_sweep_raw', None)
+                        n = self.eink.sweep(raw, pattern, mode=mode, tile=tile,
+                                            delay=delay, buffer_addr=buf,
+                                            old_raw=old_raw)
+                        self._last_sweep_raw = raw
+                        return n
+                    n = self._eink_op(_do)
+                    self.eink_enabled = True
+                    response['success'] = True
+                    response['message'] = f'Sweep {pattern} ({n} tiles) mode {mode} buf {buf:#x}'
+
             elif cmd == 'carousel-start':
                 image_dir = params.get('dir')
                 interval = float(params.get('interval', 30))

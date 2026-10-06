@@ -394,3 +394,33 @@ class EInkUSBController:
         self.write_region(x, y, w, h, raw, buffer_addr)
         self.display_area(x, y, w, h, mode, buffer_addr)
         return True
+
+    def sweep(self, raw, pattern, mode=6, tile=256, delay=0.02, buffer_addr=None,
+              old_raw=None, **kw):
+        """Upload a full frame, then reveal it with a spatial refresh-wave sweep.
+
+        `raw` is 2560x1600 grayscale bytes. The frame is uploaded once to
+        `buffer_addr`, then `display_area(region, mode, buffer_addr)` is called
+        over the pattern's tiles in order (each followed by `delay` s sleep).
+
+        mode 2 (GC16) flashes each tile; mode 6 (A2) / 1 (DU) are flashless and
+        need the ping-pong buffer fix (see activeContext.md). Returns tile count.
+        """
+        from RefreshPatterns import ordered_tiles
+        import numpy as np
+        if buffer_addr is None:
+            buffer_addr = self.BUF_UPLOAD
+        old = None
+        if old_raw is not None:
+            old = np.frombuffer(old_raw, dtype=np.uint8).reshape(
+                (self.PANEL_HEIGHT, self.PANEL_WIDTH))
+        new = np.frombuffer(raw, dtype=np.uint8).reshape(
+            (self.PANEL_HEIGHT, self.PANEL_WIDTH))
+        self.display_raw(raw, buffer_addr, show=False)
+        tiles = ordered_tiles(pattern, self.PANEL_WIDTH, self.PANEL_HEIGHT,
+                              tile, tile, old=old, new=new, **kw)
+        for x, y, w, h in tiles:
+            self.display_area(x, y, w, h, mode, buffer_addr)
+            if delay:
+                time.sleep(delay)
+        return len(tiles)

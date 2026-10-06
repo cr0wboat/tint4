@@ -24,7 +24,7 @@
 - Diagnose the interpreter FIRST: `sudo python3 -c "import sys; print(sys.executable, sys.version); [print(p) for p in sys.path]"` before any env/install work.
 - Always `sudo python3 -m pip install …`; never bare `pip` / `sudo pip` (binds to the wrong Python and reports a false "already satisfied").
 - Tag every env fact `[host]` vs `[sandbox]`; never write a sandbox fact into the host's durable record. Verify before editing memory-bank.
-- Clear `__pycache__/` after Python edits.
+- Clear `__pycache__/` after Python edits — note host `sudo python3` makes it root-owned (cpython-314), so clear from the HOST with `sudo rm -rf __pycache__` (the sandbox can't write it).
 
 ## Known quirks / gotchas
 <!-- Things that bite. -->
