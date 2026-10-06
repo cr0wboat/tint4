@@ -22,12 +22,12 @@
   update works AFTER an `enable_eink()` (square rendered), but does NOTHING
   without a prior enable — remaining blocker for 4 Hz animation (see
   activeContext.md).
-- 2026-10-06: **Environment audited (host vs sandbox)** — the Cline shell is a
-  Flatpak VSCodium sandbox (Python 3.13, `/usr` read-only, no sudo/pkexec, T-CON
-  O_RDWR denied) so hardware probing can't run there. The **HOST** (Linux Mint,
-  Python 3.12) already has every daemon dep: python3-usb/evdev/pil (apt) + portio
-  0.6.2 (`/usr/local/lib/python3.12`); `sudo python3 HelperDaemon.py` is the runtime.
-  Sandbox pyusb/evdev/portio (user-site) are import/syntax aids only.
+- 2026-10-06: **Environment audited + fixed** — THREE Pythons: daemon runtime
+  `sudo python3` = **3.14** (cp314 wheels confirm), apt/system = 3.12 (bare
+  `sudo pip`), Cline sandbox = 3.13 (Flatpak). The daemon on 3.14 had `usb`+`portio`
+  but lacked `PIL`+`evdev`; installed `pillow 12.3.0` + `evdev 2.0.0` via
+  `sudo python3 -m pip`. Bare `sudo pip` had been silently targeting 3.12 ("already
+  satisfied" was the wrong interpreter). `deps OK` re-verify + ping-pong probe pending.
 - 2026-10-06: **Code analysis of the "nothing" blocker** — refined hypothesis:
   `partial_image()` writes into the same buffer it displays (buffer 1), so the A2
   diff is empty after a full display. Fix = ping-pong the two buffers (write to

@@ -14,16 +14,17 @@ display switching.
   root now holds only the focused core (EInkUSBController, ECController,
   HelperDaemon, HelperClient, WatchdogTimer, show-image.py, carousel.py).
 
-## Active constraints (UPDATED 2026-10-06 — two environments)
-- **HOST (daemon + hardware):** Linux Mint, system Python **3.12**. All daemon
-  deps already present: `python3-usb`/`python3-evdev`/`python3-pil` (apt) +
-  `portio 0.6.2` (`/usr/local/lib/python3.12/dist-packages`). Run with
-  `sudo python3 HelperDaemon.py` (sudo works on the host).
-- **SANDBOX (Cline/analysis shell):** Flatpak VSCodium, Python **3.13**, `/usr`
-  read-only, no sudo/pkexec, T-CON `/dev/bus/usb/003/002` O_RDWR denied. Cannot
-  touch hardware — analysis/tooling only. (pyusb/evdev/portio installed to the
-  sandbox user-site for import/syntax checks only.)
-- `evdev` is a SOFT dep (GlobalHotkeyListener disables hotkeys if absent).
+## Active constraints (UPDATED 2026-10-06 — THREE Pythons; verify before env work)
+- **DAEMON RUNTIME:** `sudo python3` = **Python 3.14** (the `/usr/local` source
+  build). Has all four deps: `usb` (pyusb) + `portio` (pre-existing — EC + USB
+  confirmed on HW) and `pillow 12.3.0` + `evdev 2.0.0` (installed 2026-10-06 via
+  `sudo python3 -m pip`). Run: `sudo python3 HelperDaemon.py`.
+- **APT/SYSTEM:** bare `sudo pip` + apt packages (`python3-usb`/`-evdev`/`-pil`)
+  target **Python 3.12** → `/usr/lib/python3/dist-packages`. The daemon does NOT
+  see this dir. Never use bare `pip`/`sudo pip`; always `sudo python3 -m pip`.
+- **SANDBOX (Cline shell):** Flatpak VSCodium, Python **3.13**, `/usr` read-only,
+  no sudo/pkexec, T-CON `/dev/bus/usb/003/002` O_RDWR denied — analysis/tooling only.
+- `evdev` is a SOFT dep (hotkeys only; GlobalHotkeyListener degrades gracefully).
 - T-CON USB (048d:8957 "ITE T-CON") is owned by the helper; keep the GUI closed
   when using the standalone `tcon.py` reference tool.
 
