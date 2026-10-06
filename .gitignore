@@ -208,6 +208,12 @@ __marimo__/
 
 # Local session artifacts
 *.MOV
+*.mov
+*.mp4
+*.MP4
+*.mkv
+*.avi
+*.webm
 .clinenotes/
 
 # Historical bulk (Windows binaries, captures) — kept on disk, not in git
