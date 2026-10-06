@@ -629,6 +629,7 @@ class HelperDaemon:
                 w = int(params.get('w', 2560))
                 h = int(params.get('h', 1600))
                 mode = int(params.get('mode', 6))
+                buf = 0x027675D0 if params.get('buffer', 1) == 2 else 0x0237F5D0
                 path = params.get('path')
                 if not path or not os.path.isfile(path):
                     response['error'] = "partial requires a valid 'path' param"
@@ -636,11 +637,11 @@ class HelperDaemon:
                     def _do():
                         if not self.eink_enabled:
                             self.eink.enable_eink()
-                        self.eink.partial_image(path, x, y, w, h, mode)
+                        self.eink.partial_image(path, x, y, w, h, mode, buf)
                     self._eink_op(_do)
                     self.eink_enabled = True
                     response['success'] = True
-                    response['message'] = f'Partial update ({x},{y} {w}x{h}) mode {mode}'
+                    response['message'] = f'Partial update ({x},{y} {w}x{h}) mode {mode} buf {buf:#x}'
 
             elif cmd == 'carousel-start':
                 image_dir = params.get('dir')

@@ -376,16 +376,21 @@ class EInkUSBController:
                                  raw[r * w:(r + 1) * w])
         return True
 
-    def partial_image(self, path, x, y, w, h, mode=6):
-        """Crop a region from an image, write it, and display just that region.
+    def partial_image(self, path, x, y, w, h, mode=6, buffer_addr=None):
+        """Crop a region from an image, write it to a buffer, and display it.
 
         Caller must have enabled the T-CON first (enable_eink). Re-enabling here
         would clear the panel to white — the enable sequence's 0x34 displays the
         empty buffer 2.
+
+        For an A2 partial refresh the region must be written to the buffer that is
+        NOT currently displayed (ping-pong), otherwise the A2 diff is empty and
+        nothing renders. Pass buffer_addr=0x027675D0 to write buffer 2 while buffer
+        1 is the one being displayed.
         """
         from PIL import Image
         im = Image.open(path).convert('L').resize((self.PANEL_WIDTH, self.PANEL_HEIGHT))
         raw = im.crop((x, y, x + w, y + h)).tobytes()
-        self.write_region(x, y, w, h, raw)
-        self.display_area(x, y, w, h, mode)
+        self.write_region(x, y, w, h, raw, buffer_addr)
+        self.display_area(x, y, w, h, mode, buffer_addr)
         return True

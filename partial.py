@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Partial-region update: write + display a sub-region of the eInk.
 
-Usage: partial.py IMAGE [--x N] [--y N] [--w N] [--h N] [--mode N]
+Usage: partial.py IMAGE [--x N] [--y N] [--w N] [--h N] [--mode N] [--buffer 1|2]
 """
 import sys
 import os
@@ -54,7 +54,7 @@ def main():
         return default
 
     if len(args) < 1:
-        print('usage: partial.py IMAGE [--x N] [--y N] [--w N] [--h N] [--mode N]',
+        print('usage: partial.py IMAGE [--x N] [--y N] [--w N] [--h N] [--mode N] [--buffer 1|2]',
               file=sys.stderr)
         return 1
 
@@ -64,6 +64,7 @@ def main():
     w = flag('--w', 2560)
     h = flag('--h', 1600)
     mode = flag('--mode', 6)
+    buffer = flag('--buffer', 1)
 
     if not os.path.isfile(path):
         print(f'not a file: {path}', file=sys.stderr)
@@ -79,7 +80,8 @@ def main():
         return 1
 
     t0 = time.time()
-    resp = helper.send_command('partial', x=x, y=y, w=w, h=h, mode=mode, path=path)
+    resp = helper.send_command('partial', x=x, y=y, w=w, h=h, mode=mode,
+                               buffer=buffer, path=path)
     dt = time.time() - t0
     if resp and resp.get('success'):
         print(f'OK ({dt * 1000:.0f}ms):', resp.get('message'))
