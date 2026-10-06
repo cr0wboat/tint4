@@ -13,9 +13,10 @@
   display from it, else the A2 diff is empty.
 
 ## Environment quirks
-- Dev runs inside Flatpak VSCodium sandbox: `/usr` read-only, no sudo/pkexec,
-  `/dev/bus/usb/003/002` O_RDWR denied. All hardware probing + daemon must run on
-  the HOST terminal, not the sandbox.
+- Two environments: **HOST** (Linux Mint, Python 3.12, all daemon deps present,
+  sudo works) vs **SANDBOX** (Flatpak VSCodium, Python 3.13, `/usr` read-only, no
+  sudo/pkexec, `/dev/bus/usb/003/002` O_RDWR denied). Daemon + hardware probing run
+  on the HOST; the sandbox is analysis/tooling only.
 
 ## Known quirks / gotchas
 <!-- Things that bite. -->

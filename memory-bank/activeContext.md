@@ -14,17 +14,16 @@ display switching.
   root now holds only the focused core (EInkUSBController, ECController,
   HelperDaemon, HelperClient, WatchdogTimer, show-image.py, carousel.py).
 
-## Active constraints (CORRECTED 2026-10-06)
-- Dev shell is a **Flatpak VSCodium sandbox** (`app-flatpak-com.vscodium.codium`).
-  `/usr` is READ-ONLY; **no `sudo`, no `pkexec`**. System Python is now **3.13.15**
-  (was 3.12 — the upgrade broke `.venv` and dropped system-wide pyusb/evdev/portio).
-- pyusb 1.3.1 / evdev / portio now installed to the **user site** (flatpak path)
-  and import as `mds` — but the T-CON `/dev/bus/usb/003/002` opens **O_RDONLY only**;
-  **O_RDWR is denied** by the sandbox. Hardware probing must run on the **HOST**
-  (outside the sandbox), as before.
+## Active constraints (UPDATED 2026-10-06 — two environments)
+- **HOST (daemon + hardware):** Linux Mint, system Python **3.12**. All daemon
+  deps already present: `python3-usb`/`python3-evdev`/`python3-pil` (apt) +
+  `portio 0.6.2` (`/usr/local/lib/python3.12/dist-packages`). Run with
+  `sudo python3 HelperDaemon.py` (sudo works on the host).
+- **SANDBOX (Cline/analysis shell):** Flatpak VSCodium, Python **3.13**, `/usr`
+  read-only, no sudo/pkexec, T-CON `/dev/bus/usb/003/002` O_RDWR denied. Cannot
+  touch hardware — analysis/tooling only. (pyusb/evdev/portio installed to the
+  sandbox user-site for import/syntax checks only.)
 - `evdev` is a SOFT dep (GlobalHotkeyListener disables hotkeys if absent).
-- Helper daemon needs root (euid==0) + T-CON O_RDWR + EC `ioperm` — none available
-  from inside the sandbox.
 - T-CON USB (048d:8957 "ITE T-CON") is owned by the helper; keep the GUI closed
   when using the standalone `tcon.py` reference tool.
 
