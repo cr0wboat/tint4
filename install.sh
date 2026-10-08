@@ -70,6 +70,15 @@ Type=Application
 X-GNOME-Autostart-enabled=true
 EOF
 
+# --- 3b. app-finder launcher --------------------------------------------
+say "Installing app-finder launcher…"
+APPS_DIR="$HOME/.local/share/applications"
+mkdir -p "$APPS_DIR"
+sed -e "s|@INDICATOR_PY@|$IPY|g" -e "s|@HERE@|$HERE|g" \
+    "$HERE/tint4-restart.desktop" > "$APPS_DIR/tint4-restart.desktop"
+chmod +x "$APPS_DIR/tint4-restart.desktop"
+update-desktop-database "$APPS_DIR" 2>/dev/null || true
+
 # --- 4. config scaffold --------------------------------------------------
 say "Writing config scaffold…"
 mkdir -p "$CONFIG_DIR"

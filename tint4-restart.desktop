@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Restart tint4
+Comment=Restart the tint4 eInk indicator
+Exec=bash -c 'pkill -f tint4-indicator.py; sleep 0.5; @INDICATOR_PY@ @HERE@/tint4-indicator.py --autostart'
+Terminal=false
+Type=Application
+Icon=preferences-desktop-display
+Categories=Settings;HardwareSettings;
