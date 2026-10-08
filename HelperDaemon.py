@@ -144,6 +144,8 @@ class HelperDaemon:
         self._carousel_thread = None
         self._carousel_stop = threading.Event()
         self._carousel_lock = threading.Lock()
+        # Queryable carousel snapshot: running/dir/interval/mode/total/current
+        self._carousel_info = None
 
         # Client bookkeeping
         self._clients_lock = threading.Lock()
@@ -392,6 +394,9 @@ class HelperDaemon:
             self._carousel_stop.set()
             self._carousel_thread.join(timeout=5)
         self._carousel_thread = None
+        with self._carousel_lock:
+            if self._carousel_info:
+                self._carousel_info['running'] = False
 
     def _carousel_loop(self, image_dir, interval, mode=5):
         import glob
@@ -404,6 +409,11 @@ class HelperDaemon:
             return
         idx = 0
         enabled = False
+        with self._carousel_lock:
+            self._carousel_info = {
+                'running': True, 'dir': image_dir, 'interval': interval,
+                'mode': mode, 'total': len(images), 'current': None,
+            }
         self.logger.info(f"carousel: {len(images)} images, {interval}s interval")
         while not self._carousel_stop.is_set():
             path = images[idx % len(images)]
@@ -417,6 +427,9 @@ class HelperDaemon:
                     self.eink.display_raw(raw, mode=mode)
                 self.eink_enabled = True
                 self.logger.info(f"carousel: displayed {os.path.basename(path)}")
+                with self._carousel_lock:
+                    if self._carousel_info:
+                        self._carousel_info['current'] = path
             except Exception as e:
                 enabled = False  # re-enable next time (T-CON may have dropped)
                 self.logger.warning(f"carousel: upload failed for {path}: {e}")
@@ -683,6 +696,13 @@ class HelperDaemon:
                 self._stop_carousel()
                 response['success'] = True
                 response['message'] = 'Carousel stopped'
+
+            elif cmd == 'carousel-status':
+                with self._carousel_lock:
+                    info = dict(self._carousel_info) if self._carousel_info else None
+                response['success'] = True
+                response['carousel'] = info
+                response['message'] = 'Carousel status retrieved'
 
             elif cmd == 'reconnect-usb':
                 # Sent by the GUI after resume: the T-CON may have re-enumerated

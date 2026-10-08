@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=tint4 eInk
+Comment=eInk cover-display carousel + panel indicator
+Exec=/home/mds/Documents/tint4/tint4-indicator.py --autostart
+Icon=preferences-desktop-display
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+X-GNOME-Autostart-enabled=true
