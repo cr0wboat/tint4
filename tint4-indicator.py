@@ -29,7 +29,7 @@ import subprocess
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib  # noqa: E402
+from gi.repository import Gtk, GLib, GdkPixbuf  # noqa: E402
 
 try:
     gi.require_version('AyatanaAppIndicator3', '0.1')
@@ -56,8 +56,17 @@ ICON_RUNNING = 'tinta4plusu-eink-symbolic'
 ICON_STOPPED = 'tinta4plusu-off-symbolic'
 
 MODE_NAMES = {
-    5: 'GLD16 (default)', 2: 'GC16 (flash)', 6: 'A2 (fast)', 1: 'DU (fast)',
-    3: 'GL16', 4: 'GLR16', 7: 'GL4',
+    5: 'GLD16 — default', 2: 'GC16 — full flash', 6: 'A2 — fast, no flash',
+    1: 'DU — fastest, ghosting', 3: 'GL16 — flash', 4: 'GLR16 — flash', 7: 'GL4 — flash',
+}
+MODE_DESC = {
+    1: 'DU — 1-bit direct. Fastest, but heavy ghosting.',
+    2: 'GC16 — full 16-gray. Slow; flashes the whole panel white→black.',
+    3: 'GL16 — 16-gray, flashes.',
+    4: 'GLR16 — 16-gray, flashes.',
+    5: 'GLD16 — 16-gray + dither. The default full-frame display.',
+    6: 'A2 — 1-bit fast. No flash, some ghosting. Best for animation.',
+    7: 'GL4 — 4-gray, flashes.',
 }
 INTERVALS = [5, 15, 30, 60, 300, 900, 1800, 3600]
 
@@ -114,6 +123,7 @@ class Tint4Indicator:
         self._connected = False
         self._carousel = None
         self._daemon_starting = False
+        self._current_path = None
 
         self.ind = AppIndicator3.Indicator.new(
             'tint4', ICON_STOPPED, AppIndicator3.IndicatorCategory.HARDWARE)
@@ -227,6 +237,12 @@ class Tint4Indicator:
     def _build_menu(self):
         menu = Gtk.Menu()
 
+        self.it_thumb = Gtk.Image()
+        self.it_thumb_item = Gtk.MenuItem()
+        self.it_thumb_item.add(self.it_thumb)
+        self.it_thumb_item.set_sensitive(False)
+        menu.append(self.it_thumb_item)
+
         self.it_status = Gtk.MenuItem(label='tint4 — connecting…')
         self.it_status.set_sensitive(False)
         menu.append(self.it_status)
@@ -244,6 +260,10 @@ class Tint4Indicator:
         menu.append(self._build_interval_submenu())
         menu.append(self._build_mode_submenu())
         menu.append(self._build_brightness_submenu())
+
+        it_modes = Gtk.MenuItem(label='Refresh modes…')
+        it_modes.connect('activate', self._show_mode_help)
+        menu.append(it_modes)
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -275,6 +295,8 @@ class Tint4Indicator:
         for mode, name in MODE_NAMES.items():
             r = Gtk.RadioMenuItem.new_with_label(group, name)
             r.connect('activate', self._set_mode, mode)
+            if MODE_DESC.get(mode):
+                r.set_tooltip_text(MODE_DESC[mode])
             if mode == self.config['mode']:
                 r.set_active(True)
             sub.append(r)
@@ -322,14 +344,44 @@ class Tint4Indicator:
                     self.it_status.set_label(f'tint4 — carousel: {name} ({total})')
                     self.it_toggle.set_label('Stop carousel')
                     self.ind.set_icon_full(ICON_RUNNING, f'tint4: {name}')
+                    if cur != self._current_path:
+                        self._current_path = cur
+                        self._update_thumb(cur)
                 else:
                     self.it_status.set_label('tint4 — carousel stopped')
                     self.it_toggle.set_label('Start carousel')
                     self.ind.set_icon_full(ICON_STOPPED, 'tint4: stopped')
+                    if self._current_path is not None:
+                        self._current_path = None
+                        self._update_thumb(None)
                 self.it_toggle.set_sensitive(True)
         finally:
             self._updating = False
         return True  # keep polling
+
+    def _update_thumb(self, path):
+        """Show a thumbnail of `path` (or clear it when path is None)."""
+        if not path:
+            self.it_thumb.clear()
+            return
+        try:
+            pix = GdkPixbuf.Pixbuf.new_from_file_at_scale(path, 160, 100, True)
+            self.it_thumb.set_from_pixbuf(pix)
+        except Exception as e:
+            log.debug(f'thumbnail failed: {e}')
+            self.it_thumb.clear()
+
+    def _show_mode_help(self, _w=None):
+        """Popup describing every refresh mode."""
+        lines = []
+        for m in sorted(MODE_NAMES):
+            lines.append(f'{MODE_NAMES[m]}\n    {MODE_DESC.get(m, "")}')
+        dlg = Gtk.MessageDialog(transient_for=None, modal=True,
+                                message_type=Gtk.MessageType.INFO,
+                                buttons=Gtk.ButtonsType.OK, text='Refresh modes')
+        dlg.format_secondary_text('\n'.join(lines))
+        dlg.run()
+        dlg.destroy()
 
 
 def main():

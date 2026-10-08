@@ -33,6 +33,13 @@
   diff is empty after a full display. Fix = ping-pong the two buffers (write to
   alternate 0x027675D0) or re-establish previous frame with GC16. See activeContext.
 
+- 2026-10-08: **Fixed carousel deadlock (post-restart "eInk never changes")**. Root
+  cause: `_start_carousel` held non-reentrant `_carousel_lock` and called
+  `_stop_carousel`, which re-acquired it → the `carousel-start` handler thread
+  deadlocked forever holding the lock; every `carousel-status` then blocked on the
+  same lock, client slots leaked to `MAX_CLIENTS=8` ("too many clients"), watchdog
+  killed the daemon. Fix: `_carousel_lock = threading.RLock()` (line 146).
+
 ## In progress
 <!-- Started but not finished. -->
 

@@ -143,7 +143,7 @@ class HelperDaemon:
         # Carousel state
         self._carousel_thread = None
         self._carousel_stop = threading.Event()
-        self._carousel_lock = threading.Lock()
+        self._carousel_lock = threading.RLock()
         # Queryable carousel snapshot: running/dir/interval/mode/total/current
         self._carousel_info = None
 
