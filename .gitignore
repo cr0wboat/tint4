@@ -206,7 +206,7 @@ marimo/_lsp/
 __marimo__/
 .beads/
 
-# Local session artifacts
+# Local session artifacts (not for the public repo)
 *.MOV
 *.mov
 *.mp4
@@ -215,6 +215,7 @@ __marimo__/
 *.avi
 *.webm
 .clinenotes/
+memory-bank/
 
 # Historical bulk (Windows binaries, captures) — kept on disk, not in git
 archive/
