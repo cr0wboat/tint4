@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=tint4 eInk
 Comment=eInk cover-display carousel + panel indicator
-Exec=/home/mds/Documents/tint4/tint4-indicator.py --autostart
+Exec=@INDICATOR_PY@ @HERE@/tint4-indicator.py --autostart
 Icon=preferences-desktop-display
 Terminal=false
 Type=Application

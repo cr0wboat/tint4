@@ -59,16 +59,8 @@ fi
 say "Enabling autostart…"
 mkdir -p "$AUTOSTART_DIR"
 chmod +x "$HERE/tint4-indicator.py"
-cat > "$AUTOSTART_DIR/tint4-indicator.desktop" <<EOF
-[Desktop Entry]
-Name=tint4 eInk
-Comment=eInk cover-display carousel + panel indicator
-Exec=$IPY $HERE/tint4-indicator.py --autostart
-Icon=preferences-desktop-display
-Terminal=false
-Type=Application
-X-GNOME-Autostart-enabled=true
-EOF
+sed -e "s|@INDICATOR_PY@|$IPY|g" -e "s|@HERE@|$HERE|g" \
+    "$HERE/tint4-indicator.desktop" > "$AUTOSTART_DIR/tint4-indicator.desktop"
 
 # --- 3b. app-finder launcher --------------------------------------------
 say "Installing app-finder launcher…"
